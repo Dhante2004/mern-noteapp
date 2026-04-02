@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import API from "../api/axios";
+import api from "../api/axios";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,8 +10,8 @@ const Login = () => {
     password: "",
   });
 
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -22,83 +22,60 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setMessage("");
 
     try {
-      setLoading(true);
-
-      const res = await API.post("/auth/login", formData);
+      const res = await api.post("/auth/login", formData);
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      navigate("/dashboard");
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Login failed");
+      setMessage("Login successful");
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 700);
+    } catch (error) {
+      console.log(error.response?.data || error.message);
+      setMessage(error.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-layout">
-        <div className="auth-hero">
-          <div className="hero-badge"></div>
-          <h1>Welcome back</h1>
-          <p>
-          
-      
-          </p>
-          <div className="hero-card">
-            <h3></h3>
-            <p>
-             rik dhan nidz burger kayo sakin.
-            </p>
-          </div>
-        </div>
+    <div className="page">
+      <div className="card">
+        <h1>Login</h1>
 
-        <div className="auth-card">
-          <div className="brand-mark">🍃</div>
-          <h2>Login</h2>
-          <p className="subtitle">Enter your account details below.</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+          />
 
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="input-group">
-              <label>Email</label>
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+          />
 
-            <div className="input-group">
-              <label>Password</label>
-              <input
-                type="password"
-                name="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <button type="submit" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
 
-            <button type="submit" className="primary-btn" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </form>
+        {message && <p className="message">{message}</p>}
 
-          {message && <p className="message error">{message}</p>}
-
-          <p className="auth-switch">
-            Don&apos;t have an account? <Link to="/register">Create one</Link>
-          </p>
-        </div>
+        <p>
+          No account yet? <Link to="/register">Register here</Link>
+        </p>
       </div>
     </div>
   );

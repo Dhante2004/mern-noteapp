@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import API from "../api/axios";
+import api from "../api/axios";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -11,9 +11,8 @@ const Register = () => {
     password: "",
   });
 
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -24,100 +23,70 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setMessage("");
-    setSuccess(false);
 
     try {
-      setLoading(true);
+      const res = await api.post("/auth/register", formData);
+      setMessage(res.data.message || "Registered successfully");
 
-      const res = await API.post("/auth/register", formData);
-
-      setSuccess(true);
-      setMessage(res.data.message || "User registered successfully");
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+      });
 
       setTimeout(() => {
         navigate("/login");
-      }, 1200);
-    } catch (err) {
-      setSuccess(false);
-      setMessage(err.response?.data?.message || "Registration failed");
+      }, 1000);
+    } catch (error) {
+      console.log(error.response?.data || error.message);
+      setMessage(error.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-layout">
-        <div className="auth-hero">
-          <div className="hero-badge"></div>
-          <h1></h1>
-          <p>
-          </p>
-          <div className="hero-card">
-            <h3></h3>
-            <p>
-            </p>
-          </div>
-        </div>
+    <div className="page">
+      <div className="card">
+        <h1>Register</h1>
 
-        <div className="auth-card">
-          <div className="brand-mark">🍃</div>
-          <h2>Register</h2>
-          <p className="subtitle">tara pa burger.</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            value={formData.username}
+            onChange={handleChange}
+          />
 
-          <form onSubmit={handleSubmit} className="auth-form">
-            <div className="input-group">
-              <label>Username</label>
-              <input
-                type="text"
-                name="username"
-                placeholder="Choose a username"
-                value={formData.username}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+          />
 
-            <div className="input-group">
-              <label>Email</label>
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+          />
 
-            <div className="input-group">
-              <label>Password</label>
-              <input
-                type="password"
-                name="password"
-                placeholder="Create a password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <button type="submit" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
 
-            <button type="submit" className="primary-btn" disabled={loading}>
-              {loading ? "Creating..." : "Register"}
-            </button>
-          </form>
+        {message && <p className="message">{message}</p>}
 
-          {message && (
-            <p className={`message ${success ? "success" : "error"}`}>
-              {message}
-            </p>
-          )}
-
-          <p className="auth-switch">
-            Already have an account? <Link to="/login">Login</Link>
-          </p>
-        </div>
+        <p>
+          Already have an account? <Link to="/login">Login here</Link>
+        </p>
       </div>
     </div>
   );
