@@ -1,18 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axios";
 
-const Register = () => {
-  const navigate = useNavigate();
-
+function Register() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
   });
-
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -23,73 +19,76 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
 
     try {
-      const res = await api.post("/auth/register", formData);
-      setMessage(res.data.message || "Registered successfully");
-
-      setFormData({
-        username: "",
-        email: "",
-        password: "",
-      });
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 1000);
+      await api.post("/auth/register", formData);
+      alert("Registration successful");
+      navigate("/login");
     } catch (error) {
-      console.log(error.response?.data || error.message);
-      setMessage(error.response?.data?.message || "Registration failed");
-    } finally {
-      setLoading(false);
+      console.error("Register error:", error);
+      alert("Registration failed");
     }
   };
 
   return (
-    <div className="page">
-      <div className="card">
-        <h1>Register</h1>
+    <div className="app-shell">
+      <div className="auth-card">
+        <h1>Create account</h1>
+        <p className="auth-subtitle">
+          Start your matcha notes workspace with a clean and simple setup.
+        </p>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="username"
-            placeholder="Username"
-            value={formData.username}
-            onChange={handleChange}
-          />
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="input-group">
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              type="text"
+              name="username"
+              placeholder="Enter your username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-          />
+          <div className="input-group">
+            <label htmlFor="register-email">Email</label>
+            <input
+              id="register-email"
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <div className="input-group">
+            <label htmlFor="register-password">Password</label>
+            <input
+              id="register-password"
+              type="password"
+              name="password"
+              placeholder="Create your password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Registering..." : "Register"}
+          <button className="btn btn-primary" type="submit">
+            Register
           </button>
         </form>
 
-        {message && <p className="message">{message}</p>}
-
-        <p>
-          Already have an account? <Link to="/login">Login here</Link>
+        <p className="auth-footer">
+          Already have an account? <Link to="/login">Sign in</Link>
         </p>
       </div>
     </div>
   );
-};
+}
 
 export default Register;

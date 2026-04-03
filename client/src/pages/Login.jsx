@@ -1,17 +1,13 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axios";
 
-const Login = () => {
-  const navigate = useNavigate();
-
+function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -22,63 +18,63 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
 
     try {
-      const res = await api.post("/auth/login", formData);
-
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      setMessage("Login successful");
-
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 700);
+      const response = await api.post("/auth/login", formData);
+      localStorage.setItem("token", response.data.token);
+      navigate("/dashboard");
     } catch (error) {
-      console.log(error.response?.data || error.message);
-      setMessage(error.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
+      console.error("Login error:", error);
+      alert("Login failed");
     }
   };
 
   return (
-    <div className="page">
-      <div className="card">
-        <h1>Login</h1>
+    <div className="app-shell">
+      <div className="auth-card">
+        <h1>Welcome back</h1>
+        <p className="auth-subtitle">
+          Sign in to manage your notes with a clean matcha workspace.
+        </p>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-          />
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="input-group">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <div className="input-group">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              placeholder="Enter your password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+          <button className="btn btn-primary" type="submit">
+            Login
           </button>
         </form>
 
-        {message && <p className="message">{message}</p>}
-
-        <p>
-          No account yet? <Link to="/register">Register here</Link>
+        <p className="auth-footer">
+          No account yet? <Link to="/register">Create one</Link>
         </p>
       </div>
     </div>
   );
-};
+}
 
 export default Login;

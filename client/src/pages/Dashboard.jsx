@@ -1,56 +1,122 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import NoteForm from "../components/NoteForm";
+import NoteList from "../components/NoteList";
+import {
+  getNotes,
+  createNote,
+  updateNote,
+  deleteNote,
+} from "../api/notes";
 
-const Dashboard = () => {
+function Dashboard() {
+  const [notes, setNotes] = useState([]);
+  const [editingNote, setEditingNote] = useState(null);
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user"));
+
+  const fetchNotes = async () => {
+    try {
+      const data = await getNotes();
+      setNotes(data);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
+  const handleCreateOrUpdate = async (formData) => {
+    try {
+      if (editingNote) {
+        await updateNote(editingNote._id, formData);
+        setEditingNote(null);
+      } else {
+        await createNote(formData);
+      }
+
+      fetchNotes();
+    } catch (error) {
+      console.error("Error saving note:", error);
+      alert("Unable to save note");
+    }
+  };
+
+  const handleEdit = (note) => {
+    setEditingNote(note);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteNote(id);
+      if (editingNote && editingNote._id === id) {
+        setEditingNote(null);
+      }
+      fetchNotes();
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      alert("Unable to delete note");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingNote(null);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
     navigate("/login");
   };
 
   return (
-    <div className="dashboard-page">
+    <div className="app-shell">
       <div className="dashboard-shell">
-        <div className="dashboard-topbar">
+        <div className="dashboard-header">
           <div>
-            <p className="tiny-label">MATCHA WORKSPACE</p>
-            <h1>Dashboard</h1>
+            <h1>Matcha Notes</h1>
+            <p className="section-subtitle">
+              Organize your ideas in a calm, simple, and focused workspace.
+            </p>
           </div>
-          <button className="secondary-btn" onClick={handleLogout}>
+
+          <button className="btn btn-secondary" onClick={handleLogout}>
             Logout
           </button>
         </div>
 
-        <div className="welcome-card">
-          <div>
-            <h2>Hello, {user?.username || "User"} 🍵</h2>
-            <p>
-              You are logged in successfully. Your authentication UI is working.
+        <div className="dashboard-grid">
+          <div className="form-card">
+            <h2>{editingNote ? "Edit note" : "Create note"}</h2>
+            <p className="section-subtitle">
+              {editingNote
+                ? "Update your selected note."
+                : "Write a new note and save it to your collection."}
             </p>
-          </div>
-        </div>
 
-        <div className="grid-cards">
-          <div className="info-card">
-            <h3>Authentication</h3>
-            <p>Register and login flow connected with JWT.</p>
-          </div>
-
-          <div className="info-card">
-            <h3>Token Storage</h3>
-            <p>Your token is stored in localStorage for protected requests.</p>
+            <NoteForm
+              onSubmit={handleCreateOrUpdate}
+              editingNote={editingNote}
+              onCancel={handleCancelEdit}
+            />
           </div>
 
-          <div className="info-card">
-            <h3>Next Phase</h3>
-            <p>Connect notes CRUD here after Dhan finishes the notes routes.</p>
+          <div className="notes-card">
+            <h2>Your notes</h2>
+            <p className="section-subtitle">
+              View, update, and manage all your saved notes.
+            </p>
+
+            <NoteList
+              notes={notes}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default Dashboard;
